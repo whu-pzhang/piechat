@@ -19,4 +19,4 @@ GeoChat 论文结果：
 | LLaVA-1.5 | CLIP ViT-L14/336px | Vicuna-v1.5-7B | 66.33    | 50.53 |
 | LLaVA-1.6 | CLIP ViT-L14/336px | Vicuna-v1.5-7B | 61.33    | 52.30 |
 | GeoChat   | CLIP ViT-L14/504px | Vicuna-v1.5-7B |          |       |
-| LLaVA-1.5 | CLIP ViT-L14/336px | InternLM2-7B   | 76.95    |       |
+| LLaVA-1.5 | CLIP ViT-L14/336px | InternLM2-7B   | 76.95    | 60.83 |
