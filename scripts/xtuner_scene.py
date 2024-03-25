@@ -8,10 +8,13 @@ import tqdm
 import time
 import json
 
-import jsonlines
 import requests
 from PIL import Image
 from io import BytesIO
+import pandas as pd
+import numpy as np
+from rich.console import Console
+from rich.table import Table
 
 import torch
 from torch.utils.data import Dataset
@@ -30,6 +33,10 @@ from xtuner.model.utils import LoadWoInit, prepare_inputs_labels_for_multimodal
 from xtuner.tools.utils import get_stop_criteria, is_cn_string
 from xtuner.utils import (DEFAULT_IMAGE_TOKEN, IMAGE_TOKEN_INDEX,
                           PROMPT_TEMPLATE, SYSTEM_TEMPLATE)
+
+sys.path.append('.')
+
+from piechat.utils import load, dump
 
 TORCH_DTYPE_MAP = dict(fp16=torch.float16,
                        bf16=torch.bfloat16,
@@ -106,10 +113,13 @@ def parse_args():
 
 class SceneDataset(Dataset):
 
+    ABBRS = {}
+
     def __init__(self, data_file, image_folder):
         self.data_file = data_file
         self.image_folder = image_folder
-        self.df = [line for line in jsonlines.open(data_file)]
+        self.df = load(data_file)
+        self.split = 'dev' if 'answer' in self.df[0].keys() else 'test'
 
     def load_image(self, image_file):
         if image_file.startswith('http://') or image_file.startswith(
@@ -126,47 +136,100 @@ class SceneDataset(Dataset):
     def __getitem__(self, idx):
         line = self.df[idx]
         question_id = line['question_id']
-        image_file = osp.join(self.image_folder, line['image'])
+        image_file = osp.join(self.image_folder, line['image_path'])
         image = self.load_image(image_file)
-        question = line['text']
-        gt = line['ground_truth']
+        question = line['question']
+        answer = self.df[idx]['answer'] if 'answer' in self.df[0].keys(
+        ) else None
 
         data = {
             'question_id': question_id,
-            'image': image,
-            'image_path': line['image'],
             'question': question,
-            'ground_truth': gt,
+            'answer': answer,
+            'image': image,
+            'image_path': image_file
         }
 
         return data
 
     @master_only
-    def eval_result(self, result, show=True):
+    def eval_result(self, results_df, show=True):
 
         def calc_acc(df, group='category'):
             assert group in ['overall', 'category']
+            if group == 'overall':
+                res = {'Average': np.mean(df['hit'])}
+            else:
+                res = {}
+                abilities = list(set(df[group]))
+                abilities.sort()
+                for ab in abilities:
+                    sub_df = df[df[group] == ab]
+                    ab = self.ABBRS[ab] if ab in self.ABBRS else ab
+                    res[ab] = np.mean(sub_df['hit'])
+
+            return res
+
+        def eval_sub_data(sub_data):
+            lt = len(sub_data)
+            for i in range(lt):
+                item = sub_data.iloc[i]
+                pred = item['prediction']
+                gt = item['answer']
+                if pred != gt:
+                    return 0
+            return 1
+
+        def show_result(ret_json):
+            show_dict = ret_json.copy()
+            table = Table(title=f' GeoChat-Bench ({self.data_file}) ')
+            console = Console()
+            table.add_column('Category', justify='left')
+            table.add_column('Accuracy (%)', justify='right')
+            average = show_dict.pop('Average') * 100
+            table.add_row('Average', f'{average:.1f}')
+            table.add_section()
+            for cat_name, cat_acc in show_dict.items():
+                table.add_row(cat_name, f'{cat_acc * 100:.1f}')
+            with console.capture() as capture:
+                console.print(table, end='')
+            print('\n' + capture.get())
+
+        data = results_df.sort_values(by='question_id')
+        data['prediction'] = [str(x) for x in data['prediction']]
+
+        data_main = data[data['question_id'] < int(1e6)]
+        cate_map = {
+            i: c
+            for i, c in zip(data_main['question_id'], data_main['category'])
+        }
+
+        lt = len(data_main)
+        hit, tot = 0, 0
+        result = {}
+        for i in range(lt):
+            item = data_main.iloc[i]
+            idx = item['question_id']
+            assert idx not in result
+            sub_data = data_main[data_main['question_id'] % int(1e6) == idx]
+            ret = eval_sub_data(sub_data)
+            result[idx] = ret
+            hit += ret
+            tot += 1
+
+        data_main = data_main.copy()
+        data_main['hit'] = [result[i] for i in data_main['question_id']]
+        data_main['category'] = [cate_map[i] for i in data_main['question_id']]
+
+        ret_json = calc_acc(data_main, 'overall')
+        leaf = calc_acc(data_main, 'category')
+        ret_json.update(leaf)
+        if show:
+            show_result(ret_json)
+        return ret_json
 
 
-def eval_metrics(data_path):
-    base = [json.loads(q) for q in open(data_path, "r")]
-    correct = 0
-    incorrect = 0
-    for answers in tqdm.tqdm(base):
-        gt = answers['ground_truth'].lower()
-        answer = answers['answer'].lower().strip()
-        if gt == answer:
-            correct += 1
-        else:
-            incorrect += 1
-
-    print('correct:', correct)
-    print('incorrect:', incorrect)
-    print('Total:', correct + incorrect)
-    print('Acc:', (correct / (correct + incorrect)))
-
-
-def eval_model():
+def main():
     args = parse_args()
     torch.manual_seed(args.seed)
 
@@ -300,7 +363,10 @@ def eval_model():
             json.dump(args.__dict__, f, indent=2)
 
     data_stem = osp.splitext(osp.basename(args.data_path))[0]
-    results_jsonl_path = osp.join(save_dir, f'{data_stem}.jsonl')
+    results_xlsx_path = osp.join(save_dir,
+                                 f'geochat_scene_{data_stem}_result.xlsx')
+    results_json_path = osp.join(save_dir,
+                                 f'geochat_scene_{data_stem}_result.json')
 
     #
     dataset = SceneDataset(args.data_path, args.image_folder)
@@ -368,23 +434,30 @@ def eval_model():
 
         cur_result = {}
         cur_result['question_id'] = data_sample.get('question_id')
+        cur_result['question'] = data_sample.get('question')
+        cur_result['answer'] = data_sample.get('answer')
+        cur_result['prediction'] = predict
         cur_result['image_path'] = data_sample.get('image_path')
-        cur_result['ground_truth'] = data_sample.get('ground_truth')
-        cur_result['answer'] = predict
+        cur_result['category'] = data_sample.get('answer')
 
         results.append(cur_result)
 
     results = collect_results(results, n_samples)
 
     if get_rank() == 0:
-        with jsonlines.open(results_jsonl_path, 'w') as writer:
-            writer.write_all(results)
+        results_df = pd.DataFrame(results)
+        with pd.ExcelWriter(results_xlsx_path, engine='openpyxl') as writer:
+            results_df.to_excel(writer, index=False)
 
-        print('All done!')
+        if dataset.split == 'dev':
+            results_dict = dataset.eval_result(results_df, show=True)
+            with open(results_json_path, 'w', encoding='utf-8') as f:
+                json.dump(results_dict, f, indent=2)
+        else:
+            print('All done!')
 
     return results_jsonl_path
 
 
 if __name__ == '__main__':
-    result_file = eval_model()
-    eval_metrics(result_file)
+    main()
