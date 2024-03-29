@@ -155,6 +155,7 @@ class RSVQADataset(Dataset):
         return data
 
     @master_only
+    @staticmethod
     def eval_result(self, results_df, show=True):
 
         def calc_acc(df, group='category'):
@@ -176,8 +177,8 @@ class RSVQADataset(Dataset):
             lt = len(sub_data)
             for i in range(lt):
                 item = sub_data.iloc[i]
-                pred = item['prediction']
-                gt = item['answer']
+                pred = item['prediction'].lower().strip()
+                gt = item['answer'].lower().strip()
                 if pred != gt:
                     return 0
             return 1
@@ -221,7 +222,7 @@ class RSVQADataset(Dataset):
 
         data_main = data_main.copy()
         data_main['hit'] = [result[i] for i in data_main['question_id']]
-        data_main['category'] = [cate_map[i] for i in data_main['category']]
+        data_main['category'] = [cate_map[i] for i in data_main['question_id']]
 
         ret_json = calc_acc(data_main, 'overall')
         leaf = calc_acc(data_main, 'category')
@@ -460,4 +461,16 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    # main()
+    args = parse_args()
+    dataset = RSVQADataset(args.data_path, args.image_folder)
+
+    results_df = load(
+        'outputs/geochat_bench/rsvqa/hrben/20240325_152129/geochat_rsvqa_hrben_fixed_result.xlsx'
+    )
+    results_json_path = 'outputs/geochat_bench/rsvqa/hrben/20240325_152129/geochat_rsvqa_hrben_fixed_result.json'
+
+    if dataset.split == 'dev':
+        results_dict = dataset.eval_result(results_df, show=True)
+        with open(results_json_path, 'w', encoding='utf-8') as f:
+            json.dump(results_dict, f, indent=2)
