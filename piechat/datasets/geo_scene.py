@@ -15,10 +15,8 @@ import numpy as np
 from rich.console import Console
 from rich.table import Table
 
-import torch
 from torch.utils.data import Dataset
-from mmengine.dist import (collect_results, get_dist_info, get_rank, init_dist,
-                           master_only)
+from mmengine.dist import master_only
 
 from ..utils import load
 
@@ -29,11 +27,42 @@ def master_print(msg):
 
 
 class GeoSceneDataset(Dataset):
-
-    ABBRS = {}
+    predefined_dataset_class = {
+        'AID': [
+            'airport', 'bare land', 'baseball field', 'beach', 'bridge',
+            'center', 'church', 'commercial', 'dense residential', 'desert',
+            'farmland', 'forest', 'industrial', 'meadow', 'medium residential',
+            'mountain', 'park', 'parking', 'playground', 'pond', 'port',
+            'railway station', 'resort', 'river', 'school',
+            'sparse residential', 'square', 'stadium', 'storage tanks',
+            'viadut'
+        ],
+        'UCMerced': [
+            'agricultural', 'airplane', 'baseball diamond', 'beach',
+            'buildings', 'chaparral', 'dense residential', 'forest', 'freeway',
+            'golf course', 'harbor', 'intersection', 'medium residential',
+            'mobile home park', 'overpass', 'parking lot', 'river', 'runway',
+            'sparse residential', 'storage tanks', 'tennis court'
+        ],
+        'NWPU-RESISC45': [
+            'airplane', 'airport', 'baseball diamond', 'basketball court',
+            'beach', 'bridge', 'chaparral', 'church', 'circular farmland',
+            'cloud', 'commercial area', 'dense residential', 'desert',
+            'forest', 'freeway', 'golf course', 'ground track field', 'harbor',
+            'industrial area', 'intersection', 'island', 'lake', 'meadow',
+            'medium residential', 'mobile home park', 'mountain', 'overpass',
+            'palace', 'parking lot', 'railway', 'railway station',
+            'rectangular farmland', 'river', 'roundabout', 'runway', 'sea ice',
+            'ship', 'snow berg', 'sparse residential', 'stadium',
+            'storage tank', 'tennis court', 'terrace', 'thermal power station',
+            'wetland'
+        ]
+    }
 
     def __init__(self, name, data_file, image_folder):
+        assert name in self.predefined_dataset_class.keys()
         self.name = name
+
         self.data_file = data_file
         self.image_folder = image_folder
         self.df = load(data_file)
@@ -70,6 +99,9 @@ class GeoSceneDataset(Dataset):
 
         return data
 
+    def build_prompt(self, line, dataset=None):
+        pass
+
     @master_only
     def eval_result(self, results_df, show=True):
 
@@ -92,8 +124,8 @@ class GeoSceneDataset(Dataset):
             lt = len(sub_data)
             for i in range(lt):
                 item = sub_data.iloc[i]
-                pred = item['prediction']
-                gt = item['answer']
+                pred = item['prediction'].lower().strip()
+                gt = item['answer'].lower().strip()
                 if pred != gt:
                     return 0
             return 1

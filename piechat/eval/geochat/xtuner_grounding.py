@@ -34,8 +34,6 @@ from xtuner.tools.utils import get_stop_criteria, is_cn_string
 from xtuner.utils import (DEFAULT_IMAGE_TOKEN, IMAGE_TOKEN_INDEX,
                           PROMPT_TEMPLATE, SYSTEM_TEMPLATE)
 
-sys.path.append('.')
-
 from piechat.utils import load, dump
 
 TORCH_DTYPE_MAP = dict(fp16=torch.float16,
@@ -111,7 +109,7 @@ def parse_args():
     return args
 
 
-class RSVQADataset(Dataset):
+class GroundingDataset(Dataset):
 
     ABBRS = {
         'presence': 'presence',

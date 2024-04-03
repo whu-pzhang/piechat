@@ -174,8 +174,8 @@ class SceneDataset(Dataset):
             lt = len(sub_data)
             for i in range(lt):
                 item = sub_data.iloc[i]
-                pred = item['prediction']
-                gt = item['answer']
+                pred = item['prediction'].lower().strip()
+                gt = item['answer'].lower().strip()
                 if pred != gt:
                     return 0
             return 1
@@ -456,8 +456,18 @@ def main():
         else:
             print('All done!')
 
-    return results_jsonl_path
+    return results_json_path
 
 
 if __name__ == '__main__':
     main()
+    # args = parse_args()
+    # dataset = SceneDataset(args.data_path, args.image_folder)
+    # data_stem = osp.splitext(osp.basename(args.data_path))[0]
+
+    # results_xlsx_path = 'outputs/geochat_bench/scene/UCmerced_ft/20240401_074457/geochat_scene_UCmerced_fixed_result.xlsx'
+    # results_json_path = 'outputs/geochat_bench/scene/UCmerced_ft/20240401_074457/geochat_scene_UCmerced_fixed_result.json'
+    # results_df = pd.read_excel(results_xlsx_path)
+    # results_dict = dataset.eval_result(results_df, show=True)
+    # with open(results_json_path, 'w', encoding='utf-8') as f:
+    #     json.dump(results_dict, f, indent=2)
