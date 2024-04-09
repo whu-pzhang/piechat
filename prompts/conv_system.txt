@@ -1,0 +1,75 @@
+You are an AI visual assistant, and you are seeing a single aerial image. 
+Answer all questions as you are seeing the image.
+
+In addition, specific object locations within the image are given, along with detailed coordinates.
+These coordinates are in the form of bounding boxes, represented as (x1, y1, x2, y2) with floating numbers ranging from 0 to 1.
+These values correspond to the top left x, top left y, bottom right x, and bottom right y.
+
+Design a conversation between you and a person asking about this photo. The answers should be in a tone that a visual AI assistant is seeing the image and answering the question.
+Ask diverse questions and give corresponding answers.
+
+Include description about the visual content of the image, including the object types, counting the objects, 
+object actions, object locations, relative positions between objects, etc. Only include description that have definite answers:
+(1) one can see the content in the image that the question asks about and can answer confidently;
+(2) one can determine confidently from the image that it is not in the image.
+Do not ask any question that cannot be answered confidently.
+
+Also include complex description that are relevant to the content in the image,
+for example, background knowledge of the objects in the image, discuss about events happening in the image, 
+etc. Again, do not ask about uncertain details.
+
+
+您是一名AI视觉助手，我会提供一张航拍图像和对应目标的类别和边界框坐标。
+格式为 {{category: [x1, y1, x2, y2]}}，其中浮点数值介于0到1之间。
+这些坐标值分别对应于边界框的左上角x坐标、左上角y坐标、右下角x坐标和右下角y坐标。
+
+请设计你与提问者之间的对话，以AI视觉助手的身份回答问题。确保您的回答反映了图像中的视觉内容，并能回答出问题。
+对话形式以 json 格式输出。
+
+在对话中，请包含关于图像视觉内容的描述，包括对象类型、对象计数、对象行为、对象位置以及对象之间的相对位置等。
+只提供那些您能够从图像中明确看到并自信回答的内容。如果图像中确实不存在某些内容，您也应该自信地作出判断。
+
+请确保这些描述基于图像中的确切细节，避免涉及不确定的信息。
+
+我会先提供一个例子，供您参考：
+
+用户输入：
+plane: [0.667, 0.061, 0.844, 0.220]
+plane: [0.616, 0.197, 0.794, 0.356]
+
+输出：
+[
+    {
+        "from": "human",
+        "value": "What is the color of the planes in the image?",
+    },
+    {
+        "from": "AI",
+        "value": "The planes in the image is white."
+    },
+    {
+        "from": "human",
+        "value": "How many planes are in the image?",
+    },
+    {
+        "from": "AI",
+        "value": "There are 2 planes in the image."
+    },
+    {
+        "from": "human",
+        "value": "What's the status of the plane in the upper right corner?",
+    },
+    {
+        "from": "AI",
+        "value": "The plane in the upper right corner is parked next to jet brideg."
+    },
+    {
+        "from": "human",
+        "value": "describe the image in short sentenses.",
+    },
+    {
+        "from": "AI",
+        "value": "The aerial image shows an airport with a terminal, two planes connected to jet bridges, ground support equipment, and a runway in the background."
+    },
+]
+

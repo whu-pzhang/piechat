@@ -1,6 +1,73 @@
 # GeoChat-Bench
 
 
+## finetune
+
+采用 qlora 微调策略，在 llava-internlm2 基础上进行微调。
+
+### 训练流程
+
+LLaVA 训练一共分为两步：对齐模块预训练、指令跟随微调。
+
+预训练的 Projector 默认保存在 ./work_dirs/llava_internlm2_chat_7b_clip_vit_large_p14_336_e1_gpu8_pretrain，并且指令微调阶段将默认在此路径载入 Projector 权重 （iter_2181.pth）。
+
+1. 对齐模块训练（默认保存在 ./work_dirs/）(本次未进行)
+
+```
+NPROC_PER_NODE=8 xtuner train llava_internlm2_chat_7b_clip_vit_large_p14_336_e1_gpu8_pretrain --deepspeed deepspeed_zero2
+```
+
+2. 指令跟随微调（默认保存在 ./work_dirs/）
+
+```
+NPROC_PER_NODE=8 xtuner train piechat/configs/geochat_internlm2_7b_qlora_clip_vit_large_p14_336_lora_e1.py --deepspeed deepspeed_zero2
+```
+
+### 模型转换与合并
+
+训练完成后，会会的一组权重文件（`iter_xxx.pth`），但这些文件并不是Huggingface格式，需要对齐进行转换。
+
+```
+xtuner convert pth_to_hf $FINETUNE_CFG $PTH_PATH $SAVE_PATH
+# e.g., convert pth_to_hf piechat/configs/geochat/geochat_internlm2_7b_qlora_clip_vit_large_p14_336_lora_e1.py work_dirs/geochat_internlm2_7b_qlora_clip_vit_large_p14_336_lora_e1/iter_4826.pth work_dirs/geochat_internlm2_7b_qlora_clip_vit_large_p14_336_lora_e1/iter_4826_hf
+```
+
+转换完成后的目录如下：
+
+```
+work_dirs/geochat_internlm2_7b_qlora_clip_vit_large_p14_336_lora_e1/iter_4826_hf
+├── llm_adapter
+│   ├── adapter_config.json
+│   ├── adapter_model.bin
+│   └── README.md
+├── projector
+│   ├── config.json
+│   ├── configuration_projector.py
+│   ├── modeling_projector.py
+│   └── model.safetensors
+├── visual_encoder_adapter
+│   ├── adapter_config.json
+│   ├── adapter_model.bin
+│   └── README.md
+└── xtuner_config.py
+```
+
+之后，如果想要合并 LoRA 至LLM或者 CLIP-ViT中，使用下列命令：
+
+```
+# LLM
+xtuner convert merge $LLM $LLM_ADAPTER $SAVE_PATH
+# xtuner convert merge internlm/internlm2-chat-7b work_dirs/geochat_internlm2_7b_qlora_clip_vit_large_p14_336_lora_e1/iter_4826_hf/llm_adapter/ work_dirs/llava_internlm2_geochat_instruct_ft_qlora_1e/internlm2-chat-7b
+
+# CLIP
+xtuner convert merge $CLIP $CLIP_ADAPTER $SAVE_PATH --is-clip
+# xtuner convert merge openai/clip-vit-large-patch14-336 work_dirs/geochat_internlm2_7b_qlora_clip_vit_large_p14_336_lora_e1/iter_4826_hf/visual_encoder_adapter work_dirs/llava_internlm2_geochat_instruct_ft_qlora_1e/clip-vit-large-p14-336 --is-clip
+```
+
+### 部署
+
+
+
 ## Scene classification
 
 GeoChat 论文结果：
