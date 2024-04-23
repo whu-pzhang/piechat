@@ -1,6 +1,7 @@
 import torch
 
-from xtuner.utils import IMAGE_TOKEN_INDEX, DEFAULT_IMAGE_TOKEN, expand2square
+from xtuner.utils import IMAGE_TOKEN_INDEX, DEFAULT_IMAGE_TOKEN
+from xtuner.dataset.utils import expand2square
 from transformers import TextIteratorStreamer
 
 

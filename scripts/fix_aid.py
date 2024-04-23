@@ -8,7 +8,7 @@ from piechat.utils import load, dump
 
 def fix_aid():
     aid_file = 'data/GeoChat-Bench/aid.jsonl'
-    out_file = 'data/GeoChat-Bench/aid_fixed.jsonl'
+    out_file = 'data/PIEGeo_Bench/aid.jsonl'
 
     df = load(aid_file)
 
@@ -20,19 +20,15 @@ def fix_aid():
         question = line.pop('text')
         img_path = line.pop('image')
 
-        line.update(question_id=idx,
-                    question=question,
-                    answer=gt,
-                    image_path=img_path)
-
-        fixed.append(line)
+        new_line = dict(index=idx, image=img_path, answer=gt)
+        fixed.append(new_line)
 
     dump(fixed, out_file)
 
 
 def fix_ucmerced():
     inp_file = 'data/GeoChat-Bench/UCmerced.jsonl'
-    out_file = 'data/GeoChat-Bench/UCmerced_fixed.jsonl'
+    out_file = 'data/PIEGeo_Bench/UCmerced.jsonl'
 
     df = load(inp_file)
 
@@ -42,12 +38,8 @@ def fix_ucmerced():
         question = line.pop('text')
         img_path = line.pop('image')
 
-        line.update(question_id=idx,
-                    question=question,
-                    answer=gt,
-                    image_path=img_path)
-
-        fixed.append(line)
+        new_line = dict(index=idx, image=img_path, answer=gt)
+        fixed.append(new_line)
 
     dump(fixed, out_file)
 

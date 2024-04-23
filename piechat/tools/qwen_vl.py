@@ -5,6 +5,8 @@ import copy as cp
 from base_api import BaseAPI
 from utils import proxy_set
 
+from vlmeval.api.base import BaseAPI
+
 
 class QwenVLWrapper(BaseAPI):
 

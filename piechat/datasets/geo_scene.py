@@ -44,7 +44,7 @@ class GeoSceneDataset(Dataset):
             'mobile home park', 'overpass', 'parking lot', 'river', 'runway',
             'sparse residential', 'storage tanks', 'tennis court'
         ],
-        'NWPU-RESISC45': [
+        'RESISC45': [
             'airplane', 'airport', 'baseball diamond', 'basketball court',
             'beach', 'bridge', 'chaparral', 'church', 'circular farmland',
             'cloud', 'commercial area', 'dense residential', 'desert',
@@ -59,14 +59,19 @@ class GeoSceneDataset(Dataset):
         ]
     }
 
+    system_prompt_template = "Classify the given image in one of the following classes: {}.\nEnsure that your answer is limited to one of the options given above."
+
     def __init__(self, name, data_file, image_folder):
         assert name in self.predefined_dataset_class.keys()
         self.name = name
+        self.classes = self.predefined_dataset_class[name]
+        self.system_prompt = self.system_prompt_template.format(', '.join(
+            self.classes))
 
         self.data_file = data_file
         self.image_folder = image_folder
-        self.df = load(data_file)
-        self.split = 'dev' if 'answer' in self.df[0].keys() else 'test'
+        self.data = load(data_file)
+        self.split = 'dev' if 'answer' in self.data[0].keys() else 'test'
 
     def load_image(self, image_file):
         if image_file.startswith('http://') or image_file.startswith(
@@ -78,20 +83,19 @@ class GeoSceneDataset(Dataset):
         return image
 
     def __len__(self):
-        return len(self.df)
+        return len(self.data)
 
     def __getitem__(self, idx):
-        line = self.df[idx]
-        question_id = line['question_id']
-        image_file = osp.join(self.image_folder, line['image_path'])
+        line = self.data[idx]
+        question_id = line['index']
+        image_file = osp.join(self.image_folder, line['image'])
         image = self.load_image(image_file)
-        question = line['question']
-        answer = self.df[idx]['answer'] if 'answer' in self.df[0].keys(
+        answer = self.data[idx]['answer'] if 'answer' in self.data[0].keys(
         ) else None
 
         data = {
             'question_id': question_id,
-            'question': question,
+            'question': self.build_prompt(line),
             'answer': answer,
             'image': image,
             'image_path': image_file
@@ -99,8 +103,13 @@ class GeoSceneDataset(Dataset):
 
         return data
 
-    def build_prompt(self, line, dataset=None):
-        pass
+    def build_prompt(self, line):
+        if isinstance(line, int):
+            line = self.data[line]
+        prompt = line.get('question', '')
+        prompt += self.system_prompt
+
+        return prompt
 
     @master_only
     def eval_result(self, results_df, show=True):
@@ -115,7 +124,6 @@ class GeoSceneDataset(Dataset):
                 abilities.sort()
                 for ab in abilities:
                     sub_df = df[df[group] == ab]
-                    ab = self.ABBRS[ab] if ab in self.ABBRS else ab
                     res[ab] = np.mean(sub_df['hit'])
 
             return res
@@ -132,7 +140,7 @@ class GeoSceneDataset(Dataset):
 
         def show_result(ret_json):
             show_dict = ret_json.copy()
-            table = Table(title=f' GeoChat-Bench ({self.data_file}) ')
+            table = Table(title=f'PIEGeo-Bench ({self.data_file}) ')
             console = Console()
             table.add_column('Category', justify='left')
             table.add_column('Accuracy (%)', justify='right')

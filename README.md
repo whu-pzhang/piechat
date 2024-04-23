@@ -68,7 +68,9 @@ xtuner convert merge $CLIP $CLIP_ADAPTER $SAVE_PATH --is-clip
 
 
 
-## Scene classification
+## Scene Understanding
+
+### Scene classification
 
 GeoChat 论文结果：
 
@@ -87,7 +89,12 @@ GeoChat 论文结果：
 | LLaVA-1.6 | CLIP ViT-L14/336px | Vicuna-v1.5-7B | -           | 61.33     | 52.30     |
 | GeoChat   | CLIP ViT-L14/504px | Vicuna-v1.5-7B | -           | **84.48** | **72.03** |
 | LLaVA-1.5 | CLIP ViT-L14/336px | InternLM2-7B   | -           | 76.95     | 60.83     |
-| LLaVA-1.5 | CLIP ViT-L14/336px | InternLM2-7B   | qlora_ft-1e | **91.76** | **70.73** |
+| LLaVA-1.5 | CLIP ViT-L14/336px | InternLM2-7B   | qlora_ft-1e | **91.95** | **70.56** |
+
+### Aerial/Satellite Landmark recognition
+
+
+
 
 
 ## Visual Question Answering
@@ -114,6 +121,16 @@ GeoChat 论文结果：
 | LLaVA-1.5 | CLIP ViT-L14/336px | InternLM2-7B   | -           | 68.53     | 67.17      | 64.00       | 66.57            |
 | LLaVA-1.5 | CLIP ViT-L14/336px | InternLM2-7B   | qlora_ft-1e | **91.23** | **92.38**  | **96.00**   | **93.20**        |
 
-## Visual Grounding
+
+## Visual Localization & Counting
+
+
+### Refering
+
+### Grounding
+
+### Counting
+
+
 
 

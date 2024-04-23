@@ -6,6 +6,9 @@ from utils import get_logger
 
 
 class BaseAPI:
+    allowed_types = ['text', 'image']
+    INTERLEAVE = True
+    INSTALL_REQ = False
 
     def __init__(self,
                  retry=10,
