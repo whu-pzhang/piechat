@@ -39,14 +39,14 @@ accumulative_counts = 2
 dataloader_num_workers = 0
 max_epochs = 1
 optim_type = AdamW
-lr = 2e-4
+lr = 2e-5
 betas = (0.9, 0.999)
 weight_decay = 0
 max_norm = 1  # grad clip
 warmup_ratio = 0.03
 
 # Save
-save_steps = 50000
+save_steps = 5000
 save_total_limit = 2  # Maximum checkpoints to keep (-1 means unlimited)
 
 # Evaluate the generation performance during the training
@@ -69,31 +69,20 @@ image_processor = dict(
     trust_remote_code=True)
 
 model = dict(type=LLaVAModel,
-             freeze_llm=True,
+             freeze_llm=False,
              freeze_visual_encoder=True,
              pretrained_pth=pretrained_pth,
              llm=dict(type=AutoModelForCausalLM.from_pretrained,
                       pretrained_model_name_or_path=llm_name_or_path,
-                      trust_remote_code=True,
-                      torch_dtype=torch.float16,
-                      quantization_config=dict(
-                          type=BitsAndBytesConfig,
-                          load_in_4bit=True,
-                          load_in_8bit=False,
-                          llm_int8_threshold=6.0,
-                          llm_int8_has_fp16_weight=False,
-                          bnb_4bit_compute_dtype=torch.float16,
-                          bnb_4bit_use_double_quant=True,
-                          bnb_4bit_quant_type='nf4')),
-             llm_lora=dict(type=LoraConfig,
-                           r=64,
-                           lora_alpha=16,
-                           lora_dropout=0.05,
-                           bias='none',
-                           task_type='CAUSAL_LM'),
+                      trust_remote_code=True),
              visual_encoder=dict(
                  type=CLIPVisionModel.from_pretrained,
-                 pretrained_model_name_or_path=visual_encoder_name_or_path))
+                 pretrained_model_name_or_path=visual_encoder_name_or_path),
+             visual_encoder_lora=dict(type=LoraConfig,
+                                      r=64,
+                                      lora_alpha=16,
+                                      lora_dropout=0.05,
+                                      bias='none'))
 
 #######################################################################
 #                      PART 3  Dataset & Dataloader                   #

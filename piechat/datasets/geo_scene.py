@@ -59,7 +59,7 @@ class GeoSceneDataset(Dataset):
         ]
     }
 
-    system_prompt_template = "Classify the given image in one of the following classes: {}.\nEnsure that your answer is limited to one of the options given above."
+    system_prompt_template = "Classify the given image in one of the following classes: {}."
 
     def __init__(self, name, data_file, image_folder):
         assert name in self.predefined_dataset_class.keys()
