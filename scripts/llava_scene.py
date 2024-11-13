@@ -6,13 +6,13 @@ import jsonlines
 from tqdm import tqdm
 from pathlib import Path
 
-from llava.constants import IMAGE_TOKEN_INDEX, DEFAULT_IMAGE_TOKEN, DEFAULT_IM_START_TOKEN, DEFAULT_IM_END_TOKEN
+from llava.constants import (IMAGE_TOKEN_INDEX, DEFAULT_IMAGE_TOKEN,
+                             DEFAULT_IM_START_TOKEN, DEFAULT_IM_END_TOKEN)
 from llava.conversation import conv_templates, SeparatorStyle
 from llava.model.builder import load_pretrained_model
 from llava.utils import disable_torch_init
-from llava.mm_utils import process_images, tokenizer_image_token, get_model_name_from_path
-
-from PIL import Image
+from llava.mm_utils import (process_images, tokenizer_image_token,
+                            get_model_name_from_path)
 
 import requests
 from PIL import Image
@@ -99,7 +99,6 @@ def eval_model(args):
         conv = conv_templates[args.conv_mode].copy()
         conv.append_message(conv.roles[0], inp)
         conv.append_message(conv.roles[1], None)
-
         prompt = conv.get_prompt()
 
         input_ids = tokenizer_image_token(prompt,

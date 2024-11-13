@@ -21,15 +21,15 @@ from xtuner.utils import PROMPT_TEMPLATE
 #                          PART 1  Settings                           #
 #######################################################################
 # Model
-llm_name_or_path = 'internlm/internlm2-chat-7b'
+llm_name_or_path = '/data2/hf_models/internlm2_chat_7b'
 visual_encoder_name_or_path = 'openai/clip-vit-large-patch14-336'
 # Specify the pretrained pth
-pretrained_pth = './pretrain/llava_v15_7b_xtuner_pretrain/epoch_1.pth'  # noqa: E501
+pretrained_pth = '/data2/hf_models/llava_internlm2_7b_pretrain/epoch_1.pth'  # noqa: E501
 
 # Data
 data_root = './data/GeoChat_Instruct/'
 data_path = data_root + 'GeoChat_Instruct.json'
-image_folder = data_root + 'images'
+image_folder = data_root + 'share/softwares/kartik/GeoChat_finetuning/final_images_llava/'
 prompt_template = PROMPT_TEMPLATE.internlm2_chat
 max_length = int(2048 - (336 // 14)**2)
 

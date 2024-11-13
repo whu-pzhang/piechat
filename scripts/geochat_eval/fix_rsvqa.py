@@ -35,12 +35,11 @@ def fix_rsvqa_hr():
 
         cur_item = dict(
             question_id=question_id,
-            image_id=img_id,
-            image_path=f'{img_id}.tif',
-            category=question_type,
-            question=
+            image=f'{img_id}.tif',
+            text=
             f'{question_text}\nAnswer the question using a single word or phrase.',
-            answer=answer,
+            category=question_type,
+            ground_truth=answer,
         )
         results.append(cur_item)
 
@@ -75,12 +74,11 @@ def fix_rsvqa_lr():
 
         cur_item = dict(
             question_id=question_id,
-            image_id=img_id,
-            image_path=f'{img_id}.tif',
-            category=question_type,
-            question=
+            image=f'{img_id}.tif',
+            text=
             f'{question_text}\nAnswer the question using a single word or phrase.',
-            answer=answer,
+            category=question_type,
+            ground_truth=answer,
         )
         results.append(cur_item)
 
@@ -88,8 +86,8 @@ def fix_rsvqa_lr():
 
 
 def main():
-    fix_rsvqa_hr()
     fix_rsvqa_lr()
+    fix_rsvqa_hr()
 
 
 if __name__ == '__main__':

@@ -2,17 +2,19 @@ import argparse
 import json
 import os
 import torch
-import jsonlines
 from tqdm import tqdm
 from pathlib import Path
+import warnings
 
-from geochat.constants import IMAGE_TOKEN_INDEX, DEFAULT_IMAGE_TOKEN, DEFAULT_IM_START_TOKEN, DEFAULT_IM_END_TOKEN
+warnings.filterwarnings("ignore")
+
+from geochat.constants import (IMAGE_TOKEN_INDEX, DEFAULT_IMAGE_TOKEN,
+                               DEFAULT_IM_START_TOKEN, DEFAULT_IM_END_TOKEN)
 from geochat.conversation import conv_templates, SeparatorStyle
 from geochat.model.builder import load_pretrained_model
 from geochat.utils import disable_torch_init
-from geochat.mm_utils import process_images, tokenizer_image_token, get_model_name_from_path
-
-from PIL import Image
+from geochat.mm_utils import (process_images, tokenizer_image_token,
+                              get_model_name_from_path)
 
 import requests
 from PIL import Image
@@ -53,7 +55,7 @@ def eval_model(args):
     output_folder.mkdir(exist_ok=True, parents=True)
     qs_stem = Path(args.question_file).stem
     output_file = output_folder / f'{qs_stem}_{model_name}.jsonl'
-    output_fp = jsonlines.open(output_file, 'w')
+    output_fp = open(output_file, 'w')
 
     for idx, qs in enumerate(tqdm(questions)):
         img_file = os.path.join(args.image_folder, qs['image'])
@@ -62,13 +64,7 @@ def eval_model(args):
 
         # Similar operation in model_worker.py
         image_tensor = process_images([image], image_processor, model.config)
-        if type(image_tensor) is list:
-            image_tensor = [
-                image.to(model.device, dtype=torch.float16)
-                for image in image_tensor
-            ]
-        else:
-            image_tensor = image_tensor.to(model.device, dtype=torch.float16)
+        image_tensor = image_tensor.to(model.device, dtype=torch.float16)
 
         inp = qs['text']
         if model.config.mm_use_im_start_end:
@@ -79,7 +75,6 @@ def eval_model(args):
         conv = conv_templates[args.conv_mode].copy()
         conv.append_message(conv.roles[0], inp)
         conv.append_message(conv.roles[1], None)
-
         prompt = conv.get_prompt()
 
         input_ids = tokenizer_image_token(prompt,
@@ -101,14 +96,16 @@ def eval_model(args):
                                         temperature=args.temperature,
                                         max_new_tokens=args.max_new_tokens,
                                         use_cache=True)
-        outputs = tokenizer.decode(output_ids[0],
+
+        input_token_len = input_ids.shape[1]
+        outputs = tokenizer.decode(output_ids[0][input_token_len:],
                                    skip_special_tokens=True).strip()
 
         ans = dict(question_id=qs['question_id'],
                    image_id=qs['image'],
                    answer=outputs,
                    ground_truth=qs['ground_truth'])
-        output_fp.write(ans)
+        output_fp.write(json.dumps(ans) + '\n')
     output_fp.close()
 
     return output_file
