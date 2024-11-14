@@ -16,8 +16,10 @@ def fix_aid():
     for idx, line in enumerate(df):
         gt = line.pop('ground_truth')[:-2]
         gt = re.sub(r'([A-Z])', r' \1', gt).strip()
+        image_file = line.pop('image').replace('png', 'jpg')
 
         line['ground_truth'] = gt
+        line['image'] = image_file
         fixed.append(line)
 
     dump(fixed, out_file)

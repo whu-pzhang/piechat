@@ -24,7 +24,10 @@ huggingface-cli download --repo-type dataset \
 
 1. Scene classification
 
-评测前，需修复 `aid.jsonl` 文件中 `ground_truth` 字段的问题（多了 `gt` 字符，单词间无空格）
+评测前，需修复 `aid.jsonl` 文件中的几个问题：
+
+    1. `ground_truth` 字段多了 `gt` 字符，单词间无空格
+    2. `image` 字段文件后缀不对，AID 数据图片格式为 jpg
 
 ```bash
 # 运行前检查脚本内数据路径
@@ -56,7 +59,7 @@ python scripts/geochat_eval/batch_geochat_scene.py \
 | Dataset  | Accuary |
 | -------- | ------- |
 | UCmerced | 84.48   |
-| AID      |         |
+| AID      | 71.90   |
 
 
 1. VQA
@@ -135,8 +138,6 @@ python scripts/geochat_eval/fix_rsvqa.py
 
 - RSVQA-LR 评测
 
-
-
 ```bash
 python geochat/eval/batch_geochat_vqa.py \
     --model-path /data2/hf_models/geochat_7b \
@@ -148,18 +149,18 @@ python geochat/eval/batch_geochat_vqa.py \
 
 - RSVQA-HR 评测
 
-```Shell
+```bash
 python geochat/eval/batch_geochat_vqa.py \
     --model-path /data2/hf_models/geochat_7b \
-    --image-folder data/GeoChat-Bench/images/Images_LR/ \
-    --question-file data/GeoChat-Bench/lrben.jsonl \
+    --image-folder data/RSVQA/HR/Data/ \
+    --question-file data/GeoChat-Bench/hrben_fixed.jsonl \
     --answers-file outputs/lrben_geochat_7b.jsonl # output file
 ```
 
-| Dataset | Accuary |
-| ------- | ------- |
-| LRBEN   |         |
-| HRBEN   |         |
+| Dataset | Presence | Comparison | Rulal/Urban | Count | Average Accuracy |
+| ------- | -------- | ---------- | ----------- | ----- | ---------------- |
+| LRBEN   | 90.96    | 90.25      | 95.00       | 25.18 | 71.34(92.07)     |
+| HRBEN   | 58.98    | 83.17      | -           | -     | 72.52            |
 
 
 1. Region-Captioning/Visual grounding

@@ -37,8 +37,8 @@ def evaluation_metrics(data_path):
     correct = 0
     incorrect = 0
     for answers in tqdm(base):
-        gt = answers['question_id'].split('/')[0].lower()
-        answer = answers['answer'].replace(' ', '').lower().replace('.', '')
+        gt = answers['ground_truth'].lower()
+        answer = answers['answer'].lower()
         if gt == answer:
             correct = correct + 1
         else:
