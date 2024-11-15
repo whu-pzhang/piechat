@@ -5,11 +5,13 @@ import json
 from tqdm import tqdm
 import shortuuid
 
-from geochat.constants import IMAGE_TOKEN_INDEX, DEFAULT_IMAGE_TOKEN, DEFAULT_IM_START_TOKEN, DEFAULT_IM_END_TOKEN
+from geochat.constants import (IMAGE_TOKEN_INDEX, DEFAULT_IMAGE_TOKEN,
+                               DEFAULT_IM_START_TOKEN, DEFAULT_IM_END_TOKEN)
 from geochat.conversation import conv_templates, SeparatorStyle
 from geochat.model.builder import load_pretrained_model
 from geochat.utils import disable_torch_init
-from geochat.mm_utils import tokenizer_image_token, get_model_name_from_path, KeywordsStoppingCriteria
+from geochat.mm_utils import (tokenizer_image_token, get_model_name_from_path,
+                              KeywordsStoppingCriteria)
 
 from PIL import Image
 import math
@@ -33,9 +35,7 @@ def eval_model(args):
     model_name = get_model_name_from_path(model_path)
     tokenizer, model, image_processor, context_len = load_pretrained_model(
         args.model_path, args.model_base, model_name)
-    import pdb
-    pdb.set_trace()
-    # print(model)
+
     questions = []
     questions = [
         json.loads(q)
@@ -57,6 +57,7 @@ def eval_model(args):
 
         for j in range(i, batch_end):
             image_file = questions[j]['image_id'] + '.png'
+            qs = questions[j]['question']
 
             if questions[j]['type'] == 'ref':
                 qs = "[refer] Give me the location of <p> " + qs + " </p>"

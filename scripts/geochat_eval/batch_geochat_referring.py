@@ -5,11 +5,13 @@ import json
 from tqdm import tqdm
 import shortuuid
 
-from geochat.constants import IMAGE_TOKEN_INDEX, DEFAULT_IMAGE_TOKEN, DEFAULT_IM_START_TOKEN, DEFAULT_IM_END_TOKEN
+from geochat.constants import (IMAGE_TOKEN_INDEX, DEFAULT_IMAGE_TOKEN,
+                               DEFAULT_IM_START_TOKEN, DEFAULT_IM_END_TOKEN)
 from geochat.conversation import conv_templates, SeparatorStyle
 from geochat.model.builder import load_pretrained_model
 from geochat.utils import disable_torch_init
-from geochat.mm_utils import tokenizer_image_token, get_model_name_from_path, KeywordsStoppingCriteria
+from geochat.mm_utils import (tokenizer_image_token, get_model_name_from_path,
+                              KeywordsStoppingCriteria)
 
 from PIL import Image
 import math

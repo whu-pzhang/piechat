@@ -163,59 +163,28 @@ python geochat/eval/batch_geochat_vqa.py \
 | HRBEN   | 58.98    | 83.17      | -           | -     | 72.52            |
 
 
-1. Region-Captioning/Visual grounding
+- Referring
 
 
+Referring 和 Region Caption/Grounding 采用的图像包含在 GeoChat_Instruct 数据集中。
 
-
-## Detials
-
-
-Below we provide a general guideline for evaluating datasets.
-
-1. LRBEN/HRBEN.
-Images and ground truth for evaluation need to be downloaded from the following sources: [LRBEN](https://zenodo.org/records/6344334), [HRBEN](https://zenodo.org/records/6344367)
-Give the path to the extracted image folder in the evaluation script. We add the following text after each question during our evaluation.
-```
-<question>
-Answer the question using a single word or phrase.
-```
-```Shell
-python geochat/eval/batch_geochat_scene.py \
+```bash
+python scripts/geochat_eval/batch_geochat_referring.py \
     --model-path /data2/hf_models/geochat_7b \
-    --image-folder data/GeoChat-Bench/images/UCMerced_LandUse/Images \
-    --question-file data/GeoChat-Bench/UCmerced.jsonl \
-    --answers-file outputs/UCmerced_geochat_7b.jsonl # output file
-```
-2. Scene Classification.
-Download the images from the following sources, [UCmerced](http://weegee.vision.ucmerced.edu/datasets/landuse.html), [AID](https://drive.google.com/drive/folders/1-1D9DrYYWMGuuxx-qcvIIOV1oUkAVf-M). We add the following text after each question during our evaluation.
-```
-<question>
-Classify the image from the following classes. Answer in one word or a short phrase.
-```
-```Shell
-python geochat/eval/batch_geochat_scene.py \
-    --model-path /path/to/model \
-    --question-file path/to/jsonl/file \
-    --answer-file path/to/output/jsonl/file \
-    --image_folder path/to/image/folder/
+    --image-folder data/GeoChat_Instruct/share/softwares/kartik/GeoChat_finetuning/final_images_llava/ \
+    --question-file data/GeoChat-Bench/referring.jsonl \
+    --answers-file outputs/referring_geochat_7b.jsonl
 ```
 
-3. Region-Captioning/Visual grounding.
 
-The evaluation images are present in the image.zip folder in [GeoChat_Instruct](https://huggingface.co/datasets/MBZUAI/GeoChat_Instruct/blob/main/images.zip). 
-```Shell
-python geochat/eval/batch_geochat_grounding.py \
-    --model-path /path/to/model \
-    --question-file path/to/jsonl/file \
-    --answer-file path/to/output/jsonl/file \
-    --image_folder path/to/image/folder/
+- Region-Captioning/Visual grounding
+
+
+```bash
+python scripts/geochat_eval/batch_geochat_grounding.py \
+    --model-path /data2/hf_models/geochat_7b \
+    --image-folder data/GeoChat_Instruct/share/softwares/kartik/GeoChat_finetuning/final_images_llava/ \
+    --question-file data/GeoChat-Bench/region_captioning.jsonl \
+    --answers-file outputs/region_caption_geochat_7b.jsonl
 ```
 
-```Shell
-python geochat/eval/batch_geochat_referring.py \
-    --model-path /path/to/model \
-    --question-file path/to/jsonl/file \
-    --answer-file path/to/output/jsonl/file \
-    --image_folder path/to/image/folder/
-```
